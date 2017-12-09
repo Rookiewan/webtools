@@ -1,4 +1,4 @@
 {
-  "name": "heartBeat",
-  "script": "./heartBeat.js"
+  "name": "tools",
+  "script": "./tools.js"
 }
