@@ -1,0 +1,23 @@
+{
+  "name": "zhuabao",
+  "version": "1.0.0",
+  "author": "陈万芳",
+  "license": "MIT",
+  "private": true,
+  "main": "main.js",
+  "dependencies": {
+    "express": "^4.16.2",
+    "superagent": "^3.8.2"
+  },
+  "scripts": {
+    "start": "node ./heartBeat.js",
+    "upx": "node ./upx.js",
+    "win": "electron-packager . heartBeat --platform=win32 --arch=x64 --out=./dist --overwrite --app-version=1.0.0 --prune=true --electron-version=1.7.9 --ignore=\"(dist|process.json|docs|.gitignore|LICENSE|README.md|yarn.lock|node_modules)\"",
+    "win_asar": "electron-packager . heartBeat --platform=win32 --arch=x64 --out=./dist --asar --overwrite --app-version=1.0.0 --prune=true --electron-version=1.7.9 --ignore=\"(dist|process.json|docs|.gitignore|LICENSE|README.md|yarn.lock|node_modules)\""
+  },
+  "devDependencies": {
+    "async": "^2.6.0",
+    "shelljs": "^0.7.8",
+    "upx": "^1.0.5"
+  }
+}

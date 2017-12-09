@@ -1,0 +1,28 @@
+const shell = require('shelljs')
+const UPX = require('upx')({})
+
+const UPX_EXE = 'D:/Software/upx394w/upx.exe'
+const APP_PATH = './dist/heartBeat-win32-x64'
+
+// UPX(`${APP_PATH}/heartBeat.exe`)
+//   .output(`${APP_PATH}/heartBeat.exe`)
+//   .start()
+//   .then(status => {
+//     console.log(status)
+//     UPX(`${APP_PATH}/node.dll`)
+//       .output(`${APP_PATH}/node.dll`)
+//       .start()
+//       .then(status => {
+//         console.log(status)
+//       })
+//       .catch(err => {
+//         console.log(err)
+//       })
+//   })
+//   .catch(err => {
+//     console.log(err)
+//   })
+// shell.exec(`${UPX_EXE} ${APP_PATH}/*.exe`)
+// shell.exec(`${UPX_EXE} ${APP_PATH}/node.dll`)
+shell.exec(`${UPX_EXE} ${APP_PATH}/icudtl.dat`)
+// shell.exec(`${UPX_EXE} ${APP_PATH}/*.exe && ${UPX_EXE} ${APP_PATH}/*.dll && ${UPX_EXE} ${APP_PATH}/*.pak ${UPX_EXE} ${APP_PATH}/*.dat`)
