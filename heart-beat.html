@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://cdn.bootcss.com/element-ui/2.0.7/theme-chalk/index.css" rel="stylesheet">
+  <title>心跳</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+    }
+    .file-url-input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      opacity: 0;
+    }
+    .log-content {
+      overflow-y: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <el-row>
+      <el-col :span="10">
+        <div class="log-header">
+          <h4>心跳log</h4>
+        </div>
+        <div class="log-content" :style="logStyle">
+          <p v-for="(log, index) in logInfo" :key="index">
+            {{log.time}}<br />
+            {{log.content}}<br />
+            {{log.status}}<br />
+          </p>
+        </div>
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="beatPercent"></el-progress>
+      </el-col>
+      <el-col :span="14">
+        <el-row style="margin-bottom: 10px;">
+          <el-col :span="24">
+            <el-card>
+              <div slot="header">
+                <h5 style="margin: 0;">心跳信息</h5>
+              </div>
+              <el-row>
+                <el-col :span="14">cookies数量</el-col>
+                <el-col :span="10">{{beatInfo.totalCount}}</el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="14">心跳成功数量</el-col>
+                <el-col :span="10">{{beatInfo.successCount}}</el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="14">已心跳次数</el-col>
+                <el-col :span="10">{{beatInfo.beatCount}}</el-col>
+              </el-row>
+            </el-card>
+          </el-col>
+        </el-row>
+        <el-form ref="form" :model="form" label-width="100px">
+          <el-form-item label="CK文件地址">
+            <input type="file" accept="text/plain" class="file-url-input" @ondrop="onDropFile" @change="onChangeFile" :disabled="looping" />
+            <el-input readonly v-model="form.cookieFilePath" placeholder="点击选择文件或者拖拽文件"></el-input>
+          </el-form-item>
+          <el-form-item label="心跳URL">
+            <el-input v-model="form.url" :disabled="looping" placeholder="心跳的url地址"></el-input>
+          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="心跳间隔">
+                <el-select v-model="form.beatInterval" :disabled="looping">
+                  <!-- <el-option label="10s" :value="1000 * 10"></el-option> -->
+                  <el-option label="1分钟" :value="1000 * 60"></el-option>
+                  <el-option label="5分钟" :value="1000 * 60 * 5"></el-option>
+                  <el-option label="10分钟" :value="1000 * 60 * 10"></el-option>
+                  <el-option label="20分钟" :value="1000 * 60 * 20"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="并发数">
+                <el-select v-model="form.limit" :disabled="looping">
+                  <el-option label="10" :value="10"></el-option>
+                  <el-option label="20" :value="20"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="成功标识">
+            <el-input v-model="form.successFlag" :disabled="looping" placeholder="用于验证是否心跳成功"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onStart" :disabled="looping">启动</el-button>
+            <el-button type="primary" @click="onStartByHand" :disabled="!looping">手动心跳</el-button>
+            <el-button type="danger" @click="onStop" :disabled="!looping">停止</el-button>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+  </div>
+  <script src="https://cdn.bootcss.com/vue/2.5.9/vue.min.js"></script>
+  <script src="https://cdn.bootcss.com/element-ui/2.0.7/index.js"></script>
+  <script>
+    const { ipcRenderer, remote } = require('electron')
+    new Vue({
+      el: '#app',
+      data () {
+        return {
+          logStyle: {
+            height: 'auto'
+          },
+          form: {
+            cookieFilePath: '',
+            url: 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=vote&opid=6ff61f410886e10d33ec96ae02c6deef',
+            beatInterval: 1000 * 60 * 5,
+            limit: 10,
+            successFlag: '中国电视好演员投票'
+          },
+          beatInfo: {
+            beatCount: 0,
+            totalCount: 0,
+            successCount: 0,
+            looping: false
+          },
+          execCount: 0,
+          beatPercent: 0,
+          logInfo: [],
+          looping: false
+        }
+      },
+      methods: {
+        onDropFile (e) {},
+        onChangeFile (e) {
+          try {
+            let filePath = e.target.files[0].path
+            this.form.cookieFilePath = filePath
+          } catch (err) {}
+        },
+        onStart () {
+          if (!this.checkOptions()) {
+            // 填写不正确
+            this.$message.error('信息填写不正确')
+            return 
+          }
+          this.logInfo = []
+          this.looping = true
+          this.execCount = 0
+          let options = {
+            cookieFilePath: this.form.cookieFilePath,
+            url: this.form.url,
+            interval: this.form.beatInterval,
+            limit: this.form.limit
+          }
+          ipcRenderer.send('heart-beat', {
+            option: 'doBeat',
+            winId: window.WIN_ID,
+            params: {
+              opt: 1,
+              options
+            }
+          })
+          this.$notify.success({
+            title: '提示',
+            message: '开始心跳'
+          })
+        },
+        onStartByHand () {
+          this.execCount = 0
+          let options = {
+            cookieFilePath: this.form.cookieFilePath,
+            url: this.form.url,
+            interval: this.form.beatInterval,
+            limit: this.form.limit
+          }
+          ipcRenderer.send('heart-beat', {
+            option: 'doBeat',
+            winId: window.WIN_ID,
+            params: {
+              opt: 3,
+              options
+            }
+          })
+          this.$notify.success({
+            title: '提示',
+            message: '开始执行手动心跳'
+          })
+        },
+        onStop () {
+          this.looping = false
+          let options = {
+            cookieFilePath: this.form.cookieFilePath,
+            url: this.form.url,
+            interval: this.form.beatInterval,
+            limit: this.form.limit
+          }
+          ipcRenderer.send('heart-beat', {
+            option: 'doBeat',
+            winId: window.WIN_ID,
+            params: {
+              opt: 2,
+              options
+            }
+          })
+          this.$notify.success({
+            title: '提示',
+            message: '已停止心跳'
+          })
+        },
+        computedLogStyle () {
+          this.logStyle.height = `${window.innerHeight - 100}px`
+        },
+        checkOptions () {
+          return this.form.cookieFilePath !== '' && this.form.successFlag !== ''
+        }
+      },
+      mounted () {
+        this.computedLogStyle()
+        window.addEventListener('resize', e => {
+          this.computedLogStyle()
+        }, false)
+        // 间隔时间心跳回调
+        ipcRenderer.on('doBeat', (event, msg) => {
+          // this.looping = msg.looping
+          let len = this.logInfo.length
+          if (len > 100) {
+            this.logInfo = this.logInfo.slice(len - 100)
+          }
+          this.logInfo.push({
+            time: '',
+            content: '-----------',
+            status: ''
+          })
+          this.beatInfo = msg
+          // this.$notify.success({
+          //   title: '心跳成功',
+          //   message: '心跳成功'
+          // })
+        })
+        // 每个cookie心跳回调
+        ipcRenderer.on('doBeatCookie', (event, cookie) => {
+          this.execCount++
+          let percent = Math.floor((this.execCount * 100) / this.beatInfo.totalCount)
+          this.beatPercent = percent > 100 ? 100 : percent
+          // let date = new Date()
+          // let time = `[${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}]`
+          // this.logInfo.push({
+          //   time,
+          //   content: cookie.cookie,
+          //   status: cookie.active ? '心跳成功' : '心跳失败'
+          // })
+          if (cookie.active) {
+            this.beatInfo.successCount++
+          } else {
+            let date = new Date()
+            let time = `[${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}]`
+            this.logInfo.push({
+              time,
+              content: cookie.cookie,
+              status: '心跳失败'
+            })
+          }
+        })
+        // 页面关闭通知
+        ipcRenderer.on('onClose', (event) => {
+          this.$confirm('是否关闭该页面？', '提示', {
+            confirmButtonText: '关闭页面',
+            cancelButtonText: '缩小到隐藏托盘',
+            closeOnClickModal: false,
+            closeOnPressEscape: false,
+            showClose: false,
+            type: 'warning'
+          }).then(() => {
+            event.sender.send('closePage', {
+              winId: window.WIN_ID
+            })
+          }).catch(() => {
+            console.log('隐藏托盘')
+            remote.getCurrentWindow().hide()
+          })
+        })
+      }
+    })
+  </script>
+</body>
+</html>

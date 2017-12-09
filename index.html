@@ -4,9 +4,85 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <link href="https://cdn.bootcss.com/element-ui/2.0.7/theme-chalk/index.css" rel="stylesheet">
+  <title>web tools</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .card-box {
+      margin: 10px 0;
+      text-align: center;
+      color: #fff;
+      background-color: #409EFF;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  
+  <div id="app">
+    <template v-for="(toolRow, rowIndex) in computedTools">
+      <el-row :key="rowIndex">
+        <el-col :span="7" :offset="1" v-for="(tool, toolIndex) in toolRow" :key="toolIndex">
+          <el-card @click.native="onClickCard(tool.func)" class="card-box">{{tool.text}}</el-card>
+        </el-col>
+      </el-row>
+    </template>
+  </div>
+  <script src="https://cdn.bootcss.com/vue/2.5.9/vue.min.js"></script>
+  <script src="https://cdn.bootcss.com/element-ui/2.0.7/index.js"></script>
+  <script>
+    const { ipcRenderer, remote } = require('electron')
+    new Vue({
+      el: '#app',
+      data () {
+        return {
+          tools: [
+            {
+              func: 'heartBeat',
+              text: '心跳'
+            }
+          ]
+        }
+      },
+      methods: {
+        onClickCard (func) {
+          ipcRenderer.send('open-page', func)
+        }
+      },
+      computed: {
+        computedTools () {
+          let tools = []
+          let rowLen = 3
+          for (let i = 0; i < this.tools.length; i = i + (rowLen - 1)) {
+            let arr = this.tools.slice(rowLen * i, rowLen)
+            tools.push(arr)
+          }
+          return tools
+        }
+      },
+      mounted () {
+        // 页面关闭通知
+        ipcRenderer.on('onClose', (event) => {
+          this.$confirm('是否关闭该页面？', '提示', {
+            confirmButtonText: '关闭页面',
+            cancelButtonText: '缩小到隐藏托盘',
+            closeOnClickModal: false,
+            closeOnPressEscape: false,
+            showClose: false,
+            type: 'warning'
+          }).then(() => {
+            event.sender.send('closePage', {
+              winId: window.WIN_ID
+            })
+          }).catch(() => {
+            console.log('隐藏托盘')
+            remote.getCurrentWindow().hide()
+          })
+        })
+      }
+    })
+  </script>
 </body>
 </html>
