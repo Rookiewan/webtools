@@ -77,8 +77,7 @@ class HeartBeat {
               }))
             } catch (err) {}
             callback(null)
-          })
-          .catch(err => {
+          }, (err) => {
             cookie.active = false
             try {
               this.cookieBeatBack(Object.assign({}, cookie, {
