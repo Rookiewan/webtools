@@ -12,7 +12,7 @@ function createWindow ({ page = 'index.html', width = 800, height = 600 }) {
   let win = new BrowserWindow({
     width,
     height,
-    icon: __dirname + '/assets/icon.png'
+    icon: path.resolve(__dirname, './assets/icon.png')
   })
   win.loadURL(url.format({
     pathname: path.join(__dirname, page),
@@ -46,7 +46,7 @@ function createWindow ({ page = 'index.html', width = 800, height = 600 }) {
 
 app.on('ready', () => {
   mainWin = createWindow({})
-  tray = new Tray('./assets/icon.png')
+  tray = new Tray(path.resolve(__dirname, './assets/icon.png'))
   tray.setToolTip('tools，双击显示')
   tray.on('double-click', () => {
     Object.keys(wins).map(winId => {
@@ -100,6 +100,7 @@ ipcMain.on('heart-beat', (event, { option, params }) => {
         event.sender.send('doBeat', JSON.parse(JSON.stringify(wins[winId].instance)))
         heartBeat.startHeartBeat()
         heartBeat.onBeatBack(instance => {
+          console.log(instance)
           event.sender.send('doBeat', instance)
         })
         heartBeat.onCookieBeatBack(cookie => {
@@ -119,9 +120,10 @@ ipcMain.on('closePage', (event) => {
   let winId = event.sender.id
   console.log('close ' + winId)
   try {
-    wins[winId].win.destroy()
     wins[winId].instance.stop()
+    wins[winId].win.destroy()
   } catch (err) {
+    console.log(err)
   }
   delete wins[winId]
 })

@@ -40,7 +40,7 @@
             {{log.status}}<br />
           </p>
         </div>
-        <el-progress :text-inside="true" :stroke-width="18" :percentage="beatPercent"></el-progress>
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="beatPercent" :status="beatPercent === 100 ? 'success' : ''"></el-progress>
       </el-col>
       <el-col :span="14">
         <el-row style="margin-bottom: 10px;">
@@ -76,7 +76,7 @@
             <el-col :span="12">
               <el-form-item label="心跳间隔">
                 <el-select v-model="form.beatInterval" :disabled="looping">
-                  <!-- <el-option label="10s" :value="1000 * 10"></el-option> -->
+                  <el-option label="10s" :value="1000 * 10"></el-option>
                   <el-option label="1分钟" :value="1000 * 60"></el-option>
                   <el-option label="5分钟" :value="1000 * 60 * 5"></el-option>
                   <el-option label="10分钟" :value="1000 * 60 * 10"></el-option>
@@ -245,7 +245,8 @@
         })
         // 每个cookie心跳回调
         ipcRenderer.on('doBeatCookie', (event, cookie) => {
-          this.execCount++
+          this.beatInfo.successCount = cookie.successCount
+          this.execCount = cookie.execCount
           let percent = Math.floor((this.execCount * 100) / this.beatInfo.totalCount)
           this.beatPercent = percent > 100 ? 100 : percent
           // let date = new Date()

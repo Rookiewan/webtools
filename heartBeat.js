@@ -20,9 +20,10 @@ class HeartBeat {
     this.config = Object.assign({}, CONFIG, params)
     this.cookies = []
     this.counter = null
-    this.beatCount = 0
-    this.totalCount = 0
-    this.successCount = 0
+    this.beatCount = 0 // 心跳总次数
+    this.totalCount = 0 // cookies 总数
+    this.successCount = 0 //当前心跳 成功次数
+    this.execCount = 0 // 当前心跳 执行次数
     this.looping = false
     this.beatCallback = () => {}
     this.cookieBeatBack = () => {}
@@ -51,6 +52,8 @@ class HeartBeat {
   }
   startHeartBeat (handMode) {
     this.looping = true
+    this.successCount = 0
+    this.execCount = 0
     const _LIMIT = this.cookies.length >= this.config.limit ? this.config.limit : this.cookies.length
     if (this.cookies.length > 0) {
       asyncLib.mapLimit(this.cookies, _LIMIT, (cookie, callback) => {
@@ -65,15 +68,22 @@ class HeartBeat {
         this.doHeartBeat(cookie.cookie)
           .then(() => {
             cookie.active = true
+            this.successCount++
             try {
-              this.cookieBeatBack(cookie)
+              this.cookieBeatBack(Object.assign({}, cookie, {
+                successCount: this.successCount,
+                execCount: this.execCount
+              }))
             } catch (err) {}
             callback(null)
           })
           .catch(err => {
             cookie.active = false
             try {
-              this.cookieBeatBack(cookie)
+              this.cookieBeatBack(Object.assign({}, cookie, {
+                successCount: this.successCount,
+                execCount: this.execCount
+              }))
             } catch (err) {}
             callback(null)
           })
@@ -91,14 +101,16 @@ class HeartBeat {
         // console.log('心跳次数: ' + (++this.beatCount))
         // console.log('\n\n')
         try {
-          this.beatCallback({
-            beatCount: this.beatCount,
-            totalCount: this.totalCount,
-            successCount: this.successCount,
-            looping: this.looping
-          })
+          if(this.looping) {
+            this.beatCallback({
+              beatCount: ++this.beatCount,
+              totalCount: this.totalCount,
+              successCount: this.successCount,
+              looping: this.looping
+            })
+          }
         } catch (err) {}
-        if (!handMode) {
+        if (!handMode && this.looping) {
           this.counter = setTimeout(() => {
             this.startHeartBeat()
           }, this.config.interval)
@@ -131,6 +143,7 @@ class HeartBeat {
             console.log(err)
             reject()
           }
+          this.execCount++
           const regx = new RegExp(this.config.successFlag)
           if (regx.test(res.text)) {
             // 心跳成功
@@ -180,14 +193,14 @@ class HeartBeat {
   }
   // 停止心跳
   stop () {
-    try {
-      this.beatCallback({
-        beatCount: this.beatCount,
-        totalCount: this.totalCount,
-        successCount: this.successCount,
-        looping: this.looping
-      })
-    } catch (err) {}
+    // try {
+    //   this.beatCallback({
+    //     beatCount: this.beatCount,
+    //     totalCount: this.totalCount,
+    //     successCount: this.successCount,
+    //     looping: this.looping
+    //   })
+    // } catch (err) {}
     clearTimeout(this.counter)
     this.totalCount = 0
     this.beatCount = 0
@@ -204,6 +217,7 @@ class HeartBeat {
   }
   // 手动心跳
   beatByHand () {
+    // TODO: 手动心跳冲突
     this.startHeartBeat(true)
   }
 }
