@@ -34,11 +34,15 @@ function createWindow ({ page = 'index.html', width = 800, height = 600 }) {
   })
   // 被关闭后释放资源
   win.on('closed', e => {
-    console.log(win.id + ' has closed')
-    try {
-      wins[win.id].instance.stop()
-    } catch (err) {}
-    delete wins[win.id]
+    // try {
+    //   wins[win.id].instance.stop()
+    // } catch (err) {}
+    // try {
+    //   wins[winId].win.destroy()
+    // } catch (err) {
+    //   console.log(err)
+    // }
+    // delete wins[win.id]
   })
 
   return win
@@ -100,7 +104,6 @@ ipcMain.on('heart-beat', (event, { option, params }) => {
         event.sender.send('doBeat', JSON.parse(JSON.stringify(wins[winId].instance)))
         heartBeat.startHeartBeat()
         heartBeat.onBeatBack(instance => {
-          console.log(instance)
           event.sender.send('doBeat', instance)
         })
         heartBeat.onCookieBeatBack(cookie => {
@@ -121,9 +124,9 @@ ipcMain.on('closePage', (event) => {
   console.log('close ' + winId)
   try {
     wins[winId].instance.stop()
+  } catch (err) {}
+  try {
     wins[winId].win.destroy()
-  } catch (err) {
-    console.log(err)
-  }
+  } catch (err) {}
   delete wins[winId]
 })

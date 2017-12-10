@@ -7,7 +7,7 @@ class HeartBeat {
   constructor (params = {}) {
     const ONE_MINUTE = 1000 * 60
     const VOTE_URL = 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=do_vote'
-    const PAGE_URL = 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=vote&opid=6ff61f410886e10d33ec96ae02c6deef'
+    const PAGE_URL = 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=index'
     const BEAT_INTERVAL = ONE_MINUTE * 5
     const LIMIT = 10
     const CONFIG = {
@@ -15,7 +15,8 @@ class HeartBeat {
       url: PAGE_URL,
       interval: BEAT_INTERVAL,
       limit: LIMIT,
-      successFlag: '中国电视好演员投票'
+      successFlag: '男演员',
+      showLog: false
     }
     this.config = Object.assign({}, CONFIG, params)
     this.cookies = []
@@ -94,16 +95,19 @@ class HeartBeat {
         }
         // removeCookies()
         this.successCount = this.cookies.filter(_ => _.active === true).length
-        // console.log('\n')
-        // console.log('心跳间隔: ' + (this.config.interval / 1000) + '秒')
-        // console.log('总数量: ' + this.totalCount)
-        // console.log('心跳成功数量: ' + this.successCount)
-        // console.log('心跳次数: ' + (++this.beatCount))
-        // console.log('\n\n')
+        this.beatCount++
+        if (this.config.showLog) {
+          console.log('\n')
+          console.log('心跳间隔: ' + (this.config.interval / 1000) + '秒')
+          console.log('总数量: ' + this.totalCount)
+          console.log('心跳成功数量: ' + this.successCount)
+          console.log('心跳次数: ' + (this.beatCount))
+          console.log('\n\n')
+        }
         try {
           if(this.looping) {
             this.beatCallback({
-              beatCount: ++this.beatCount,
+              beatCount: this.beatCount,
               totalCount: this.totalCount,
               successCount: this.successCount,
               looping: this.looping
@@ -134,7 +138,7 @@ class HeartBeat {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/wxpic,image/sharpp,*/*;q=0.8',
           'Accept-Encoding': 'gzip, deflate',
           'Accept-Language': 'zh-CN,en-US;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Le X820 Build/FEXCNFN5902605092S; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.5.19.1140 NetType/WIFI Language/zh_CN',
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13A404 MicroMessenger/6.5.6 NetType/WIFI Language/zh_CN',
           'Cookie': cookie
         })
         .end((err, res) => {
@@ -145,12 +149,20 @@ class HeartBeat {
           }
           this.execCount++
           const regx = new RegExp(this.config.successFlag)
-          if (regx.test(res.text)) {
-            // 心跳成功
-            // console.log(cookie + ' >>> 心跳成功')
-            resolve()
-          } else{
-            // console.log(cookie + ' >>> 心跳失败')
+          try {
+            if (regx.test(res.text)) {
+              // 心跳成功
+              if (this.config.showLog) {
+                console.log(cookie + ' >>> 心跳成功')
+              }
+              resolve()
+            } else{
+              if (this.config.showLog) {
+                console.log(cookie + ' >>> 心跳失败')
+              }
+              reject()
+            }
+          } catch (err) {
             reject()
           }
         })
@@ -218,7 +230,9 @@ class HeartBeat {
   // 手动心跳
   beatByHand () {
     // TODO: 手动心跳冲突
-    this.startHeartBeat(true)
+    clearTimeout(this.counter)
+    this.handMode = true
+    // this.startHeartBeat(true)
   }
 }
 

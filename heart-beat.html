@@ -98,7 +98,7 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onStart" :disabled="looping">启动</el-button>
-            <el-button type="primary" @click="onStartByHand" :disabled="!looping">手动心跳</el-button>
+            <!-- <el-button type="primary" @click="onStartByHand" :disabled="!looping">手动心跳</el-button> -->
             <el-button type="danger" @click="onStop" :disabled="!looping">停止</el-button>
           </el-form-item>
         </el-form>
@@ -118,10 +118,10 @@
           },
           form: {
             cookieFilePath: '',
-            url: 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=vote&opid=6ff61f410886e10d33ec96ae02c6deef',
+            url: 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=index',
             beatInterval: 1000 * 60 * 5,
             limit: 10,
-            successFlag: '中国电视好演员投票'
+            successFlag: '男演员'
           },
           beatInfo: {
             beatCount: 0,
