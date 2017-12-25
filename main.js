@@ -79,8 +79,8 @@ ipcMain.on('open-page', (event, page) => {
   switch (page) {
     case 'heartBeat':
       pageUrl = 'heart-beat.html'
-      width = 800
-      height = 580
+      width = 900
+      height = 660
       break
     default:
   }

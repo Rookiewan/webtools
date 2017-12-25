@@ -7,7 +7,7 @@ class HeartBeat {
   constructor (params = {}) {
     const ONE_MINUTE = 1000 * 60
     const VOTE_URL = 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=do_vote'
-    const PAGE_URL = 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=index'
+    const PAGE_URL = 'http://m9c2ecb95.wxvote.youtoupiao.com/page/show/id/412eb24d.html'
     const BEAT_INTERVAL = ONE_MINUTE * 5
     const LIMIT = 10
     const CONFIG = {
@@ -15,7 +15,7 @@ class HeartBeat {
       url: PAGE_URL,
       interval: BEAT_INTERVAL,
       limit: LIMIT,
-      successFlag: '男演员',
+      successFlag: 'lalalala',
       showLog: false
     }
     this.config = Object.assign({}, CONFIG, params)
@@ -28,7 +28,22 @@ class HeartBeat {
     this.looping = false
     this.beatCallback = () => {}
     this.cookieBeatBack = () => {}
+    this.init()
     this.readCookies(this.config.cookieFilePath)
+  }
+  init () {
+    try {
+      let { protocol } = this.config
+      let arr = protocol.split('\n').map(_ => /:/.test(_) && _)
+      let protocols = {}
+      arr.map(_ => {
+        if (_) {
+          let _row = _.split(':')
+          protocols[_row[0].trim()] = _row.slice(1).join(':').trim()
+        }
+      })
+      this.config.protocols = protocols
+    } catch (err) {}
   }
   // 读取cookies
   readCookies (cookiesFileName) {
@@ -128,18 +143,9 @@ class HeartBeat {
     return new Promise((resolve, reject) => {
       request
         .get(this.config.url)
-        .set({
-          'Host': 'www.zghyyw.com',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': 1,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/wxpic,image/sharpp,*/*;q=0.8',
-          'Referer': 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=index&from=singlemessage',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/wxpic,image/sharpp,*/*;q=0.8',
-          'Accept-Encoding': 'gzip, deflate',
-          'Accept-Language': 'zh-CN,en-US;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13A404 MicroMessenger/6.5.6 NetType/WIFI Language/zh_CN',
+        .set(Object.assign(this.config.protocols, {
           'Cookie': cookie
-        })
+        }))
         .end((err, res) => {
           if (err) {
             // throw err

@@ -73,7 +73,7 @@
             <el-input v-model="form.url" :disabled="looping" placeholder="心跳的url地址"></el-input>
           </el-form-item>
           <el-row>
-            <el-col :span="12">
+            <el-col :span="10">
               <el-form-item label="心跳间隔">
                 <el-select v-model="form.beatInterval" :disabled="looping">
                   <el-option label="10s" :value="1000 * 10"></el-option>
@@ -84,13 +84,16 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="9">
               <el-form-item label="并发数">
                 <el-select v-model="form.limit" :disabled="looping">
                   <el-option label="10" :value="10"></el-option>
                   <el-option label="20" :value="20"></el-option>
                 </el-select>
               </el-form-item>
+            </el-col>
+            <el-col :span="4" :offset="1">
+              <el-button type="primary" @click="setProtocolVisible = true" :disabled="looping">协议头</el-button>
             </el-col>
           </el-row>
           <el-form-item label="成功标识">
@@ -104,6 +107,22 @@
         </el-form>
       </el-col>
     </el-row>
+    <el-dialog
+      title="设置请求协议头"
+      :visible.sync="setProtocolVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      center>
+      <el-input
+        type="textarea"
+        :rows="6"
+        placeholder="请输入协议头"
+        v-model="form.protocol">
+      </el-input>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="onSetReqProtocol">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
   <script src="https://cdn.bootcss.com/vue/2.5.9/vue.min.js"></script>
   <script src="https://cdn.bootcss.com/element-ui/2.0.7/index.js"></script>
@@ -118,10 +137,11 @@
           },
           form: {
             cookieFilePath: '',
-            url: 'http://www.zghyyw.com/index.php?m=Termin&c=VoteGoodActor&a=index',
+            url: 'http://m9c2ecb95.wxvote.youtoupiao.com/page/show/id/412eb24d.html',
             beatInterval: 1000 * 60 * 5,
             limit: 10,
-            successFlag: '男演员'
+            successFlag: '投票规则',
+            protocol: ''
           },
           beatInfo: {
             beatCount: 0,
@@ -132,7 +152,8 @@
           execCount: 0,
           beatPercent: 0,
           logInfo: [],
-          looping: false
+          looping: false,
+          setProtocolVisible: false
         }
       },
       methods: {
@@ -142,6 +163,9 @@
             let filePath = e.target.files[0].path
             this.form.cookieFilePath = filePath
           } catch (err) {}
+        },
+        onSetReqProtocol () {
+          this.setProtocolVisible = false
         },
         onStart () {
           if (!this.checkOptions()) {
@@ -154,9 +178,11 @@
           this.execCount = 0
           let options = {
             cookieFilePath: this.form.cookieFilePath,
-            url: this.form.url,
+            url: this.form.url.trim(),
             interval: this.form.beatInterval,
-            limit: this.form.limit
+            limit: this.form.limit,
+            protocol: this.form.protocol.trim(),
+            successFlag: this.form.successFlag.trim()
           }
           ipcRenderer.send('heart-beat', {
             option: 'doBeat',
@@ -175,9 +201,11 @@
           this.execCount = 0
           let options = {
             cookieFilePath: this.form.cookieFilePath,
-            url: this.form.url,
+            url: this.form.url.trim(),
             interval: this.form.beatInterval,
-            limit: this.form.limit
+            limit: this.form.limit,
+            protocol: this.form.protocol.trim(),
+            successFlag: this.form.successFlag.trim()
           }
           ipcRenderer.send('heart-beat', {
             option: 'doBeat',
@@ -196,9 +224,11 @@
           this.looping = false
           let options = {
             cookieFilePath: this.form.cookieFilePath,
-            url: this.form.url,
+            url: this.form.url.trim(),
             interval: this.form.beatInterval,
-            limit: this.form.limit
+            limit: this.form.limit,
+            protocol: this.form.protocol.trim(),
+            successFlag: this.form.successFlag.trim()
           }
           ipcRenderer.send('heart-beat', {
             option: 'doBeat',
@@ -217,7 +247,7 @@
           this.logStyle.height = `${window.innerHeight - 100}px`
         },
         checkOptions () {
-          return this.form.cookieFilePath !== '' && this.form.successFlag !== ''
+          return this.form.cookieFilePath !== '' && this.form.successFlag !== '' && this.form.protocol !== ''
         }
       },
       mounted () {
