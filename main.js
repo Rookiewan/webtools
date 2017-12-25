@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, Tray } = require('electron')
 const path = require('path')
 const url = require('url')
-const HeartBeat = require('./heartBeat.js')
+const HeartBeat = require('./modules/heartBeat.js')
 
 let mainWin
 let winsCount = 0

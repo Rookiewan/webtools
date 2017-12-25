@@ -1,4 +1,4 @@
-const HeartBeat = require('./heartBeat.js')
+const HeartBeat = require('./modules/heartBeat.js')
 
 let heartBeat = new HeartBeat({
   showLog: true
