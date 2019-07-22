@@ -136,11 +136,11 @@
             height: 'auto'
           },
           form: {
-            cookieFilePath: '',
-            url: 'http://m9c2ecb95.wxvote.youtoupiao.com/page/show/id/412eb24d.html',
+            cookieFilePath: '/Users/yoshi/works/gits/webtools/cookies.txt',
+            url: 'https://www.baidu.com',
             beatInterval: 1000 * 60 * 5,
             limit: 10,
-            successFlag: '投票规则',
+            successFlag: '百度一下',
             protocol: ''
           },
           beatInfo: {
@@ -182,7 +182,8 @@
             interval: this.form.beatInterval,
             limit: this.form.limit,
             protocol: this.form.protocol.trim(),
-            successFlag: this.form.successFlag.trim()
+            successFlag: this.form.successFlag.trim(),
+            showLog: false
           }
           ipcRenderer.send('heart-beat', {
             option: 'doBeat',

@@ -53,7 +53,7 @@ class HeartBeat {
       filePath = path.resolve(__dirname,cookiesFileName)
     }
     let cookiesStr = fs.readFileSync(filePath).toString()
-    cookiesStr.split('\r\n').map(_ => {
+    cookiesStr.replace(/\\r/g, '').split('\n').map(_ => {
       try {
         let cookie = _.split(';')[0]
         if (cookie) {

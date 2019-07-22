@@ -8,12 +8,23 @@ let winsCount = 0
 let wins = {}
 let tray = null
 
-function createWindow ({ page = 'index.html', width = 800, height = 600 }) {
-  let win = new BrowserWindow({
+function createWindow ({ page = 'index.html', width = 800, height = 600, parent = null }) {
+  let windowParams = {
     width,
     height,
-    icon: path.resolve(__dirname, './assets/icon.png')
-  })
+    icon: path.resolve(__dirname, './assets/icon.png'),
+    // frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      nodeIntegrationInWorker: true,
+      nodeIntegrationInSubFrames: true,
+      allowRunningInsecureContent: true
+    }
+  }
+  if (parent) {
+    windowParams.parent = parent
+  }
+  let win = new BrowserWindow(windowParams)
   win.loadURL(url.format({
     pathname: path.join(__dirname, page),
     protocol: 'file:',
@@ -25,7 +36,7 @@ function createWindow ({ page = 'index.html', width = 800, height = 600 }) {
     win: win,
     instance: null
   }
-  // win.webContents.executeJavaScript(`window.WIN_ID='${id}'`)
+  win.webContents.executeJavaScript(`window.WIN_ID='${win.id}'`)
 
   // 即将被关闭
   win.on('close', e => {
@@ -66,7 +77,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  if (win === null) {
+  if (mainWin === null) {
     mainWin = createWindow()
   }
 })
@@ -87,13 +98,14 @@ ipcMain.on('open-page', (event, page) => {
   let _win = createWindow({
     page: pageUrl,
     width,
-    height
+    height,
+    parent: mainWin
   })
 })
 
 // 心跳服务
-ipcMain.on('heart-beat', (event, { option, params }) => {
-  let winId = event.sender.id
+ipcMain.on('heart-beat', (event, { option, params, winId }) => {
+  // let winId = event.sender.id
   switch (option) {
     case 'doBeat':
       // opt: 1 启动, 2 停止, 3手动心跳
