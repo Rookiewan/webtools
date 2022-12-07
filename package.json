@@ -9,7 +9,7 @@
     "async": "^2.6.0",
     "axios": "^0.17.1",
     "cheerio": "^1.0.0-rc.2",
-    "express": "^4.16.2",
+    "express": "^4.17.3",
     "superagent": "^3.8.2",
     "superagent-proxy": "^1.0.2"
   },
